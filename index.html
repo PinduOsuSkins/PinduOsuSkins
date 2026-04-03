@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>osu! skins · rainfall archive (multi-screenshot)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0a0c14;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #eef2ff;
+            padding: 2rem 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* rain animation */
+        .rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .rain i {
+            position: absolute;
+            top: -20px;
+            background: rgba(180, 210, 255, 0.25);
+            width: 2px;
+            height: 12px;
+            border-radius: 2px;
+            animation: fall linear infinite;
+            opacity: 0.4;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-20px) rotate(5deg);
+                opacity: 0.3;
+            }
+            80% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(100vh) rotate(8deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(2px);
+        }
+        .title h1 {
+            font-size: 2rem;
+            font-weight: 450;
+            letter-spacing: -0.3px;
+            background: linear-gradient(120deg, #f0f3ff, #a9b9ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .title p {
+            font-size: 0.8rem;
+            color: #7c7f9e;
+            margin-top: 6px;
+        }
+
+        .discord-copy {
+            background: rgba(88, 101, 242, 0.2);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(88, 101, 242, 0.4);
+            padding: 0.5rem 1.3rem;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .discord-copy:hover {
+            background: rgba(88, 101, 242, 0.35);
+            border-color: #8d97ff;
+            transform: scale(1.02);
+        }
+
+        /* masonry grid */
+        .masonry {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 2rem 1.6rem;
+            align-items: start;
+        }
+
+        /* skin card */
+        .skin-card {
+            background: rgba(18, 20, 30, 0.55);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.2, 0.9, 0.5, 1.1);
+            box-shadow: 0 18px 32px -14px rgba(0, 0, 0, 0.5);
+            transform: translateY(0px) rotate(0deg);
+        }
+        .skin-card:hover {
+            transform: translateY(-8px) rotate(0.8deg);
+            border-color: rgba(169, 185, 255, 0.5);
+            background: rgba(28, 30, 44, 0.7);
+            box-shadow: 0 28px 40px -16px black;
+        }
+
+        /* screenshot carousel container */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: #07090f;
+            overflow: hidden;
+        }
+        .carousel-slides {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            object-fit: cover;
+        }
+        .carousel-slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        /* nav arrows */
+        .carousel-prev, .carousel-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+        .carousel-prev:hover, .carousel-next:hover {
+            opacity: 1;
+            background: rgba(88, 101, 242, 0.8);
+        }
+        .carousel-prev { left: 10px; }
+        .carousel-next { right: 10px; }
+        /* dots */
+        .carousel-dots {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dot.active {
+            background: white;
+            width: 20px;
+        }
+        .fallback-img {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: linear-gradient(135deg, #12141f, #07090f);
+            color: #5a6085;
+            font-size: 0.8rem;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .skin-info {
+            padding: 1.2rem 1.2rem 1.5rem;
+        }
+        .skin-name {
+            font-size: 1.35rem;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff, #c7bcff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .download-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #252836;
+            color: #cfd5ff;
+            text-decoration: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid #34384f;
+            transition: all 0.2s;
+            margin-top: 0.7rem;
+        }
+        .download-link:hover {
+            background: #32364f;
+            border-color: #a9b9ff;
+            color: white;
+            gap: 0.7rem;
+        }
+
+        .footer {
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5a5e83;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 1.8rem;
+        }
+
+        /* lightbox modal for fullscreen screenshots */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.92);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+        }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 85%;
+            border-radius: 24px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1b1d2bdd;
+            backdrop-filter: blur(12px);
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            color: #cbc3ff;
+            border: 1px solid #5a5e8a;
+            transition: transform 0.2s ease;
+            z-index: 999;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 680px) {
+            body { padding: 1.2rem; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .masonry { gap: 1.4rem; }
+            .carousel-prev, .carousel-next { width: 28px; height: 28px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="rain" id="rainContainer"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="title">
+            <h1>🌧️ osu!skin · rainfall gallery</h1>
+            <p>multi-screenshot · moody dark · gentle rain</p>
+        </div>
+        <div class="discord-copy" id="discordBtn">
+            <span>🎧</span>
+            <span id="discordUser">uncledane.exe</span>
+            <span style="font-size:0.7rem;">⎘</span>
+        </div>
+    </div>
+
+    <div class="masonry" id="skinGrid"></div>
+
+    <div class="footer">
+        click discord to copy username · click any screenshot to enlarge · arrows / dots to browse
+    </div>
+</div>
+
+<div id="toastMsg" class="toast">✓ copied</div>
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="">
+</div>
+
+<script>
+    // ============================================================
+    // SKIN DATABASE - EACH SKIN CAN HAVE MULTIPLE SCREENSHOTS
+    // ============================================================
+    const skins = [
+        {
+            name: "midnight rain",
+            screenshots: [
+                "assets/screenshots/midnight_1.jpg",
+                "assets/screenshots/midnight_2.jpg",
+                "assets/screenshots/midnight_3.jpg"
+            ],
+            downloadUrl: "https://your-files.com/midnight_rain.osk"
+        },
+        {
+            name: "arctic drift",
+            screenshots: [
+                "assets/screenshots/arctic_1.png",
+                "assets/screenshots/arctic_2.png"
+            ],
+            downloadUrl: "https://your-files.com/arctic.osk"
+        },
+        {
+            name: "neon ghost",
+            screenshots: [
+                "assets/screenshots/neon_1.jpg",
+                "assets/screenshots/neon_2.jpg",
+                "assets/screenshots/neon_3.jpg",
+                "assets/screenshots/neon_4.jpg"
+            ],
+            downloadUrl: "https://your-files.com/neonghost.osk"
+        },
+        {
+            name: "velaris 2.0",
+            screenshots: [
+                "assets/screenshots/velaris_1.jpg",
+                "assets/screenshots/velaris_2.jpg"
+            ],
+            downloadUrl: "https://your-files.com/velaris.osk"
+        },
+        {
+            name: "snowfall edit",
+            screenshots: [
+                "assets/screenshots/snowfall_1.png"
+            ],
+            downloadUrl: "https://your-files.com/snowfall_edit.osk"
+        }
+    ];
+
+    // YOUR DISCORD USERNAME (EDIT THIS)
+    const DISCORD_USERNAME = "uncledane.exe";
+    document.getElementById("discordUser").innerText = DISCORD_USERNAME;
+
+    // Helper: escape HTML
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Lightbox functions
+    function openLightbox(src) {
+        const lightbox = document.getElementById("lightbox");
+        const lightboxImg = document.getElementById("lightboxImg");
+        lightbox.style.display = "flex";
+        lightboxImg.src = src;
+    }
+    window.closeLightbox = function() {
+        document.getElementById("lightbox").style.display = "none";
+    };
+
+    // Carousel logic for each card (stores state per card)
+    window.initCarousel = function(cardId, screenshots) {
+        let currentIndex = 0;
+        const slides = document.querySelectorAll(`#${cardId} .carousel-slide`);
+        const dots = document.querySelectorAll(`#${cardId} .dot`);
+        
+        function updateCarousel(index) {
+            if(index < 0) index = 0;
+            if(index >= slides.length) index = slides.length - 1;
+            currentIndex = index;
+            slides.forEach((slide, i) => {
+                if(i === currentIndex) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+            dots.forEach((dot, i) => {
+                if(i === currentIndex) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        }
+        
+        window[`prevSlide_${cardId}`] = function() {
+            if(slides.length === 0) return;
+            currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+            updateCarousel(currentIndex);
+        };
+        window[`nextSlide_${cardId}`] = function() {
+            if(slides.length === 0) return;
+            currentIndex = (currentIndex + 1) % slides.length;
+            updateCarousel(currentIndex);
+        };
+        window[`goToSlide_${cardId}`] = function(index) {
+            updateCarousel(index);
+        };
+        
+        updateCarousel(0);
+    };
+
+    // Render all skins with multi-screenshot carousels
+    const gridContainer = document.getElementById("skinGrid");
+    function renderGallery() {
+        if(!gridContainer) return;
+        gridContainer.innerHTML = "";
+        
+        skins.forEach((skin, idx) => {
+            const cardId = `skin_${idx}_${Date.now()}_${Math.random()}`;
+            const safeName = escapeHtml(skin.name);
+            const screenshots = skin.screenshots || [];
+            
+            // Build slides HTML
+            let slidesHtml = "";
+            let dotsHtml = "";
+            if(screenshots.length === 0) {
+                slidesHtml = `<div class="fallback-img">🎵 no screenshots<br><span style="font-size:0.7rem;">add images</span></div>`;
+            } else {
+                screenshots.forEach((ss, ssIdx) => {
+                    slidesHtml += `
+                        <div class="carousel-slide ${ssIdx === 0 ? 'active' : ''}">
+                            <img src="${ss}" alt="${safeName} screenshot ${ssIdx+1}" 
+                                 onclick="event.stopPropagation(); openLightbox('${ss}')"
+                                 onerror="this.parentElement.innerHTML='<div class=\'fallback-img\'>🌧️ missing<br>${ss.split('/').pop()}</div>'">
+                        </div>
+                    `;
+                    dotsHtml += `<span class="dot ${ssIdx === 0 ? 'active' : ''}" onclick="event.stopPropagation(); window['goToSlide_${cardId}'](${ssIdx})"></span>`;
+                });
+            }
+            
+            const arrowsHtml = (screenshots.length > 1) ? `
+                <button class="carousel-prev" onclick="event.stopPropagation(); window['prevSlide_${cardId}']()">‹</button>
+                <button class="carousel-next" onclick="event.stopPropagation(); window['nextSlide_${cardId}']()">›</button>
+                <div class="carousel-dots">${dotsHtml}</div>
+            ` : '';
+            
+            const cardHtml = `
+                <div class="skin-card" id="${cardId}">
+                    <div class="carousel-container">
+                        <div class="carousel-slides">
+                            ${slidesHtml}
+                        </div>
+                        ${arrowsHtml}
+                    </div>
+                    <div class="skin-info">
+                        <div class="skin-name">${safeName}</div>
+                        <a href="${skin.downloadUrl}" class="download-link" target="_blank" rel="noopener noreferrer">
+                            ⬇️ download .osk
+                        </a>
+                    </div>
+                </div>
+            `;
+            gridContainer.insertAdjacentHTML('beforeend', cardHtml);
+            
+            // Initialize carousel if there are screenshots
+            if(screenshots.length > 0) {
+                setTimeout(() => initCarousel(cardId, screenshots), 10);
+            }
+        });
+    }
+    
+    renderGallery();
+
+    // Discord copy logic
+    const toast = document.getElementById("toastMsg");
+    let toastTimeout;
+    function showToast(msg) {
+        toast.innerText = msg;
+        toast.classList.add("show");
+        if(toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+    document.getElementById("discordBtn").addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(DISCORD_USERNAME);
+            showToast(`✓ copied "${DISCORD_USERNAME}"`);
+        } catch(err) {
+            const textarea = document.createElement("textarea");
+            textarea.value = DISCORD_USERNAME;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            showToast(`✓ copied "${DISCORD_USERNAME}"`);
+        }
+    });
+
+    // Rain generation
+    function createRain() {
+        const rainContainer = document.getElementById("rainContainer");
+        if(!rainContainer) return;
+        const dropsCount = 85;
+        for(let i = 0; i < dropsCount; i++) {
+            const drop = document.createElement("i");
+            drop.style.left = `${Math.random() * 100}%`;
+            drop.style.animationDelay = `${Math.random() * 8}s`;
+            drop.style.animationDuration = `${1.2 + Math.random() * 2}s`;
+            drop.style.opacity = 0.2 + Math.random() * 0.3;
+            drop.style.height = `${6 + Math.random() * 12}px`;
+            drop.style.background = `rgba(190, 210, 255, ${0.2 + Math.random() * 0.3})`;
+            rainContainer.appendChild(drop);
+        }
+    }
+    createRain();
+</script>
+</body>
+</html>
