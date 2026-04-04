@@ -430,41 +430,68 @@
         document.getElementById("lightbox").style.display = "none";
     };
 
-    // Carousel logic for each card (stores state per card)
-    window.initCarousel = function(cardId, screenshots) {
-        let currentIndex = 0;
-        const slides = document.querySelectorAll(`#${cardId} .carousel-slide`);
-        const dots = document.querySelectorAll(`#${cardId} .dot`);
-        
-        function updateCarousel(index) {
-            if(index < 0) index = 0;
-            if(index >= slides.length) index = slides.length - 1;
-            currentIndex = index;
-            slides.forEach((slide, i) => {
-                if(i === currentIndex) slide.classList.add('active');
-                else slide.classList.remove('active');
-            });
-            dots.forEach((dot, i) => {
-                if(i === currentIndex) dot.classList.add('active');
-                else dot.classList.remove('active');
-            });
+    // ========== FIXED CAROUSEL LOGIC ==========
+    // Store carousel instances globally
+    window.carousels = {};
+    
+    class Carousel {
+        constructor(cardId, screenshotCount) {
+            this.cardId = cardId;
+            this.currentIndex = 0;
+            this.screenshotCount = screenshotCount;
+            this.slides = null;
+            this.dots = null;
+            this.init();
         }
         
-        window[`prevSlide_${cardId}`] = function() {
-            if(slides.length === 0) return;
-            currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-            updateCarousel(currentIndex);
-        };
-        window[`nextSlide_${cardId}`] = function() {
-            if(slides.length === 0) return;
-            currentIndex = (currentIndex + 1) % slides.length;
-            updateCarousel(currentIndex);
-        };
-        window[`goToSlide_${cardId}`] = function(index) {
-            updateCarousel(index);
-        };
+        init() {
+            this.slides = document.querySelectorAll(`#${this.cardId} .carousel-slide`);
+            this.dots = document.querySelectorAll(`#${this.cardId} .dot`);
+            this.update();
+        }
         
-        updateCarousel(0);
+        update() {
+            if(!this.slides.length) return;
+            this.slides.forEach((slide, i) => {
+                if(i === this.currentIndex) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+            if(this.dots) {
+                this.dots.forEach((dot, i) => {
+                    if(i === this.currentIndex) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                });
+            }
+        }
+        
+        prev() {
+            if(this.screenshotCount === 0) return;
+            this.currentIndex = (this.currentIndex - 1 + this.screenshotCount) % this.screenshotCount;
+            this.update();
+        }
+        
+        next() {
+            if(this.screenshotCount === 0) return;
+            this.currentIndex = (this.currentIndex + 1) % this.screenshotCount;
+            this.update();
+        }
+        
+        goTo(index) {
+            if(index < 0 || index >= this.screenshotCount) return;
+            this.currentIndex = index;
+            this.update();
+        }
+    }
+    
+    // Global functions for onclick handlers
+    window.carouselPrev = function(cardId) {
+        if(window.carousels[cardId]) window.carousels[cardId].prev();
+    };
+    window.carouselNext = function(cardId) {
+        if(window.carousels[cardId]) window.carousels[cardId].next();
+    };
+    window.carouselGoTo = function(cardId, index) {
+        if(window.carousels[cardId]) window.carousels[cardId].goTo(index);
     };
 
     // Render all skins with multi-screenshot carousels
@@ -477,6 +504,7 @@
             const cardId = `skin_${idx}_${Date.now()}_${Math.random()}`;
             const safeName = escapeHtml(skin.name);
             const screenshots = skin.screenshots || [];
+            const screenshotCount = screenshots.length;
             
             // Build slides HTML
             let slidesHtml = "";
@@ -492,13 +520,13 @@
                                  onerror="this.parentElement.innerHTML='<div class=\'fallback-img\'>🌧️ missing<br>${ss.split('/').pop()}</div>'">
                         </div>
                     `;
-                    dotsHtml += `<span class="dot ${ssIdx === 0 ? 'active' : ''}" onclick="event.stopPropagation(); window['goToSlide_${cardId}'](${ssIdx})"></span>`;
+                    dotsHtml += `<span class="dot ${ssIdx === 0 ? 'active' : ''}" onclick="event.stopPropagation(); window.carouselGoTo('${cardId}', ${ssIdx})"></span>`;
                 });
             }
             
             const arrowsHtml = (screenshots.length > 1) ? `
-                <button class="carousel-prev" onclick="event.stopPropagation(); window['prevSlide_${cardId}']()">‹</button>
-                <button class="carousel-next" onclick="event.stopPropagation(); window['nextSlide_${cardId}']()">›</button>
+                <button class="carousel-prev" onclick="event.stopPropagation(); window.carouselPrev('${cardId}')">‹</button>
+                <button class="carousel-next" onclick="event.stopPropagation(); window.carouselNext('${cardId}')">›</button>
                 <div class="carousel-dots">${dotsHtml}</div>
             ` : '';
             
@@ -522,7 +550,7 @@
             
             // Initialize carousel if there are screenshots
             if(screenshots.length > 0) {
-                setTimeout(() => initCarousel(cardId, screenshots), 10);
+                window.carousels[cardId] = new Carousel(cardId, screenshotCount);
             }
         });
     }
